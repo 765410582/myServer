@@ -13,12 +13,17 @@ const CodeEnum = {
 
 }
 
+const StatusEnum = {
+    LoginFail: 1,
+}
 
 
+const ConnectDataBase = require("./ConnectDataBase.js");
 
 class MessageManger {
-    constructor(insMgr){
-        this.InsMgr=insMgr;
+    constructor(insMgr) {
+        this.InsMgr = insMgr;
+
     }
     message(ws, message, req) {
         let data = JSON.parse(message)
@@ -30,18 +35,26 @@ class MessageManger {
     }
 
 
-    cmdMessage(ws, data, req) {
+    async cmdMessage(ws, data, req) {
         const ip = req.connection.remoteAddress;
         const port = req.connection._peername.port;
         let id = ip + port;
         switch (data.Code) {
             case CodeEnum.loginReq:
                 console.log("登录请求")
-                let user =    this.InsMgr.UserManager.getUser(id)
+                if (!this.dataBase) {
+                    this.dataBase = await new ConnectDataBase()
+                }
+                let results = await this.dataBase.getUser(data)
+                let user =this.InsMgr.UserManager.getUser(id)
                 if (!user) {
                     this.InsMgr .UserManager.setUser(id, user, ws)
                 }
-                this.LoginSuccessRes(id,{id:id})
+                if (results.length > 0) {
+                    this.LoginSuccessRes(id, { id: id })
+                } else {
+                    this.LoginSuccessRes(id, { id: id },StatusEnum.LoginFail)
+                }
                 break;
             case CodeEnum.TetrisReq:
                 this.InsMgr.TetrisManager.addTetris(id);
@@ -58,27 +71,27 @@ class MessageManger {
 
     sendMessage(id, Code, Data = null, Status = 0, Msg = "") {
         let tdata = { Status: Status, Code: Code, Data: Data, Msg: Msg }
-        let ws =    this.InsMgr.UserManager.getWs(id)
+        let ws = this.InsMgr.UserManager.getWs(id)
         console.log("发送消息", tdata)
-        if(ws){
+        if (ws) {
             ws.send(JSON.stringify(tdata));
         }
-        
+
     }
 
     //===================================================================
     //登录成功
-     LoginSuccessRes(id, Data, Status = 0, Msg = "") {
+    LoginSuccessRes(id, Data, Status = 0, Msg = "") {
         this.sendMessage(id, CodeEnum.loginRes, Data, Status, Msg)
     }
 
     // 通知围棋消息
-     TetrisRes(id, Data, Status = 0, Msg = "") {
+    TetrisRes(id, Data, Status = 0, Msg = "") {
         this.sendMessage(id, CodeEnum.TetrisRes, Data, Status, Msg)
     }
     // 主动通知围棋消息
-     TetrisMessage(id, Data, Status = 0, Msg = "") {
-        console.log("发送消息", Data,id)
+    TetrisMessage(id, Data, Status = 0, Msg = "") {
+        console.log("发送消息", Data, id)
         this.sendMessage(id, CodeEnum.TetrisMessage, Data, Status, Msg)
     }
 }

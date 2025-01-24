@@ -3,8 +3,11 @@
 const mysql2 = require('mysql2');
 class ConnectDataBase {
   constructor() {
+    this.createConnection();
+  }
 
-    this.client = mysql2.createConnection({
+  async createConnection() {
+    const con = await mysql2.createConnection({
       host: 'localhost',
       user: 'root',
       password: 'root',
@@ -12,77 +15,93 @@ class ConnectDataBase {
       port: 3306,
       multipleStatements: true
     });
-    this.client.connect((err) => {
-      if (err) {
-        console.log('数据库连接失败', err);
-        return;
-      }
-      console.log('数据库连接成功');
-      // this.createTable();
-      this.getUsers();
-      this.getUser({ name: 'John Doe' });
-    });
+    this.client = con.promise();
   }
-
-  createTable() {
-    const sql = `
-    CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      password VARCHAR(255) NOT NULL
-    )
-  `;
-    this.client.query(sql, (err, results) => {
-      if (err) throw err;
-      console.log('表已创建或已存在');
-      this.insert({
-        name: 'John Doe',
-        password: 'password'
-      });
-    });
+  async createTable() {
+    try {
+      const sql = `
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL
+      )
+    `;
+      const [results] = await this.client.query(sql);
+      return results;
+    } catch (error) {
+      console.error("创建表 error:", error);
+    }
+    return null;
   }
   // 曾删改查
-  insert(data) {
-    const sql = 'INSERT INTO users (name, password) VALUES (?, ?)';
-    let { name, password } = data;
-    this.client.query(sql, [name, password], (err, results) => {
-      if (err) throw err;
-      console.log('用户已插入', results.insertId, results);
-    });
+  async insert(data) {
+    try {
+      const sql = 'INSERT INTO users (name, password) VALUES (?, ?)';
+      let { name, password } = data;
+      const [results] = await this.client.query(sql, [name, password]);
+      console.log("插入用户 result:", results);
+      return results;
+    } catch (error) {
+      console.error("插入用户 error:", error);
+    }
+    return null;
   }
 
-  deleteUser(data) {
-    let name = data.name;
-    const sql = 'DELETE FROM users WHERE name = ?';
-    this.client.query(sql, [name], (err, results) => {
-      if (err) throw err;
-      console.log('用户已删除', results.message);
-    });
+  async deleteUser(data) {
+    try {
+      let name = data.name;
+      const sql = 'DELETE FROM users WHERE name = ?';
+      const [results] = await this.client.query(sql, [name]);
+      return results;
+    } catch (error) {
+      console.error("删除用户 error:", error);
+    }
+    return null;
   }
-  updateUser(data) {
-    let { name, password } = data;
-    const sql = 'UPDATE users SET  password = ? WHERE name = ?';
-    this.client.query(sql, [password, name], (err, results) => {
-      if (err) throw err;
-      console.log('用户已更新', results.message);
-    });
+  async deleteUsers() {
+    try {
+      const sql = 'DELETE FROM users';
+      const [results] = await this.client.query(sql);
+      console.log("删除所有用户 result:", results);
+      return results;
+    } catch (error) {
+      console.error("删除所有用户 error:", error);
+    }
+    return null;
+
+  }
+  async updateUser(data) {
+    try {
+      let { name, password } = data;
+      const sql = 'UPDATE users SET  password = ? WHERE name = ?';
+      let [results] = await this.client.query(sql, [password, name]);
+      console.log("修改用户 result:", results);
+      return results;
+    } catch (error) {
+      console.log("修改用户 error:", error);
+    }
+    return null;
   }
 
-  getUsers() {
-    const sql = 'SELECT * FROM users';
-    this.client.query(sql, (err, results) => {
-      if (err) throw err;
-      console.log('用户数据: ', results);
-    });
+  async getUsers() {
+    try {
+      const sql = 'SELECT * FROM users';
+      let [results, fields] = await this.client.query(sql);
+      console.log("查询所有数据 results:", results);
+      return results;
+    } catch (error) {
+      console.log("查询所有数据 error:", error);
+    }
+    return null;
   }
 
-  getUser(data) {
+  async getUser(data) {
     let name = data.name;
     const sql = 'SELECT * FROM users WHERE name = ?';
-    this.client.query(sql, [name], (err, results) => {
-      if (err) throw err;
-      console.log('用户数据: ', results);
-    });
+    let [result, fields] = await this.client.query(sql, [name]);
+
+    console.log("获取用户 result:", result);
+    return result;
   }
 
 }

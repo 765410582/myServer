@@ -15,7 +15,7 @@ const WebSocket = require("ws");
 const InsMgr = require("./InsMgr.js");
 // 创建一个WebSocket服务器，监听3000端口
 const wss = new WebSocket.Server({ port: 3000 });
-const ConnectDataBase = require("./ConnectDataBase.js");
+
 // 当客户端连接时
 wss.on("connection", (ws, req) => {
   console.log("客户端已连接");
@@ -42,6 +42,6 @@ wss.on("connection", (ws, req) => {
 });
 
 
-let connect =new ConnectDataBase()
+
 
 console.log("WebSocket服务器正在监听3000端口...");
