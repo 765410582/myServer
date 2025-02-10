@@ -96,11 +96,11 @@ class ConnectDataBase {
   }
 
   async getUser(data) {
-    let name = data.name;
-    const sql = 'SELECT * FROM users WHERE name = ?';
-    let [result, fields] = await this.client.query(sql, [name]);
+    let {name,password} = data;
+    const sql = 'SELECT * FROM users WHERE name = ? AND password = ?';
+    let [result, fields] = await this.client.query(sql, [name,password]);
 
-    console.log("获取用户 result:", result);
+    console.log("获取用户 result:", result,data);
     return result;
   }
 

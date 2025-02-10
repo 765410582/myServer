@@ -27,7 +27,7 @@ wss.on("connection", (ws, req) => {
   // 当接收到客户端的消息时
   ws.on("message", (message) => {
     console.log(ip + "收到消息: %s", message);
-    console.log("InsMgr",InsMgr);
+    
     InsMgr.getInstance().MessageManger.message(ws,message,req);
   });
   // 当连接关闭时

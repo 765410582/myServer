@@ -1,4 +1,4 @@
-const InsMgr = require("../InsMgr.js");
+
 
 const TetrisStatus={
     Win:"win",
